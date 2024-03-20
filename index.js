@@ -37,6 +37,7 @@ async function run() {
     const userCollection = db.collection("users");
     const clotheCollection = db.collection("clothes");
     const donationCollection = db.collection("donations");
+    const commentCollection = db.collection("comments");
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
@@ -105,7 +106,7 @@ async function run() {
     app.get("/api/v1/donors", async (req, res) => {
       const data = await userCollection
         .find({ donation: { $exists: true } })
-        .sort({ donation: 1 })
+        .sort({ donation: -1 })
         .toArray();
       res.json({
         success: true,
@@ -171,7 +172,7 @@ async function run() {
     });
     //donation
     app.post("/api/v1/donations", async (req, res) => {
-      const { clotheId, clotheTitle, userId, userImage, price } = req.body;
+      const { clotheId, clotheTitle ,clotheImage, userId, userImage, price } = req.body;
       await userCollection.updateOne(
         { _id: new ObjectId(userId) },
         {
@@ -192,6 +193,8 @@ async function run() {
           clotheTitle,
           userId,
           quantity: 1,
+          date: new Date(),
+          clotheImage,
         });
       }
       res.json({
@@ -201,10 +204,52 @@ async function run() {
       });
     });
     app.get("/api/v1/donations", async (req, res) => {
-      const data = await donationCollection.find({}).toArray();
+      const data = await donationCollection
+        .find({})
+        .sort({ date: -1 })
+        .toArray();
       res.json({
         success: true,
         message: "successfully retrieve donations!",
+        data,
+      });
+    });
+    app.post("/api/v1/create-testimonial/:id", async (req, res) => {
+      const { id } = req.params;
+      const data = await userCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { ...req.body } }
+      );
+      res.json({
+        success: true,
+        message: "successfully testimonial added!",
+        data,
+      });
+    });
+    app.post("/api/v1/comments/:id", async (req, res) => {
+      const { id } = req.params;
+      const userData = await userCollection.findOne(new ObjectId(id));
+      const data = await commentCollection.insertOne({
+        userName: userData.name,
+        userId: userData._id,
+        image: userData.image,
+        comment: req.body.comment,
+        date: new Date(),
+      });
+      res.json({
+        success: true,
+        message: "successfully comment added!",
+        data,
+      });
+    });
+    app.get("/api/v1/comments", async (req, res) => {
+      const data = await commentCollection
+        .find({})
+        .sort({ date: -1 })
+        .toArray();
+      res.json({
+        success: true,
+        message: "successfully retrieve comments!",
         data,
       });
     });
