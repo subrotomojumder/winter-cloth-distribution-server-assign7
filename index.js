@@ -102,15 +102,27 @@ async function run() {
         data,
       });
     });
+    app.get("/api/v1/donors", async (req, res) => {
+      const data = await userCollection
+        .find({ donation: { $exists: true } })
+        .sort({ donation: 1 })
+        .toArray();
+      res.json({
+        success: true,
+        message: "successfully retrieve donors!",
+        data,
+      });
+    });
     // ==============================================================
     // won api
     app.post("/api/v1/clothes", async (req, res) => {
-      const { image, title, category, size, des } = req.body;
+      const { image, title, category, size, des, price } = req.body;
       const result = await clotheCollection.insertOne({
         image,
         title,
         category,
         size,
+        price,
         des,
       });
       res.json({
@@ -159,7 +171,14 @@ async function run() {
     });
     //donation
     app.post("/api/v1/donations", async (req, res) => {
-      const { clotheId, clotheTitle, userId } = req.body;
+      const { clotheId, clotheTitle, userId, userImage, price } = req.body;
+      await userCollection.updateOne(
+        { _id: new ObjectId(userId) },
+        {
+          $inc: { donation: price },
+          $set: { image: userImage },
+        }
+      );
       const isExists = await donationCollection.findOne({ clotheId });
       let result;
       if (isExists) {
