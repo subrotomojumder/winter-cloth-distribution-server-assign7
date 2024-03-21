@@ -103,6 +103,30 @@ async function run() {
         data,
       });
     });
+    app.post("/api/v1/volunteers/:id", async (req, res) => {
+      const { id } = req.params;
+      const result = await userCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: { ...req.body, volunteer: true },
+        }
+      );
+      res.json({
+        success: true,
+        message: "Request send successful!",
+        data: result,
+      });
+    });
+    app.get("/api/v1/volunteers", async (req, res) => {
+      const data = await userCollection
+        .find({ volunteer: { $exists: true } })
+        .toArray();
+      res.json({
+        success: true,
+        message: "successfully retrieve volunteers!",
+        data,
+      });
+    });
     app.get("/api/v1/donors", async (req, res) => {
       const data = await userCollection
         .find({ donation: { $exists: true } })
@@ -114,6 +138,7 @@ async function run() {
         data,
       });
     });
+
     // ==============================================================
     // won api
     app.post("/api/v1/clothes", async (req, res) => {
@@ -172,7 +197,8 @@ async function run() {
     });
     //donation
     app.post("/api/v1/donations", async (req, res) => {
-      const { clotheId, clotheTitle ,clotheImage, userId, userImage, price } = req.body;
+      const { clotheId, clotheTitle, clotheImage, userId, userImage, price } =
+        req.body;
       await userCollection.updateOne(
         { _id: new ObjectId(userId) },
         {
@@ -214,7 +240,7 @@ async function run() {
         data,
       });
     });
-    app.post("/api/v1/create-testimonial/:id", async (req, res) => {
+    app.post("/api/v1/testimonials/:id", async (req, res) => {
       const { id } = req.params;
       const data = await userCollection.updateOne(
         { _id: new ObjectId(id) },
